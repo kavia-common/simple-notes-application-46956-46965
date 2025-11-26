@@ -1,49 +1,26 @@
-# lightningjs
+# Ocean Notes (LightningJS)
 
-### lightningjs
+A simple notes app (create, view, edit, delete) with localStorage persistence and an Ocean Professional theme.
 
+## Run
 
-Welcome to the _lightningjs_ Lightning 3 Blits App!
+- npm install
+- npm run dev
+- The app serves on port 3000 (via Vite) in this environment
 
-### Getting started
+## Features
 
-Follow the steps below to get your Lightning 3 Blits App up and running in no time.
+- Notes list with Edit and Delete actions
+- Add/Edit form with validation (title required)
+- Live preview of selected note
+- localStorage persistence under key `notes_app_v1`
+- Modern styling: rounded corners, subtle shadows, smooth transitions, blue and amber accents
 
-#### IDE setup
+## Environment
 
-It is highly recommended to install the Blits [VS-code extension](https://marketplace.visualstudio.com/items?itemName=LightningJS.lightning-blits) which will give you template highlighting and improved autocompletion.
+The app reads Vite envs via `import.meta.env`. No backend is required. If variables like `VITE_API_BASE` or `VITE_BACKEND_URL` are present, they are ignored for now.
 
-#### Project setup
+## Tech
 
-Run the following command to install the dependencies of your App:
-
-```sh
-npm install
-```
-
-#### Build and run in development mode
-
-Run your App in development mode:
-
-```sh
-npm run dev
-```
-
-This command uses Vite to fire up a local server, with Hot Reloading support. Visit the provided link in your web browser to see the App in action.
-
-#### Build the App for production
-
-Create an optimized and minified version of your App:
-
-```sh
-npm run build
-```
-
-This will create a production version of the app in the `dist` folder.
-
-
-### Resources
-
-- [Blits documentation](https://lightningjs.io/v3-docs/blits/getting_started/intro.html) - official documentation
-- [Blits Example App](https://blits-demo.lightningjs.io/?source=true) - a great reference to learn by example
-- [Blits Components](https://lightningjs.io/blits-components.html) - off-the-shelf, basic and performant reference components
+- LightningJS (vanilla DOM usage)
+- Vite dev server and build tooling

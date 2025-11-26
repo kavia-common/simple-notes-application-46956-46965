@@ -1,128 +1,156 @@
-import Blits from '@lightningjs/blits'
+import { Theme } from '../theme';
+import { Header } from '../components/Header';
+import { NotesList } from '../components/NotesList';
+import { NoteForm } from '../components/NoteForm';
+import { EmptyState } from '../components/EmptyState';
+import { createNote, deleteNote, getNotes, getNoteById, updateNote } from '../store/NotesStore';
 
-import Loader from '../components/Loader.js'
-import Button from '../components/Button.js'
+/**
+ * PUBLIC_INTERFACE
+ * Home
+ * Root page composing the layout and wiring interactions for notes CRUD.
+ */
+export function Home() {
+  const root = document.createElement('div');
+  root.style.minHeight = '100vh';
+  root.style.background = Theme.colors.background;
+  root.style.fontFamily = 'Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji';
+  root.style.color = Theme.colors.text;
+  root.style.padding = '18px';
+  root.style.boxSizing = 'border-box';
 
-const colors = ['#f5f3ff', '#ede9fe', '#ddd6fe', '#c4b5fd', '#a78bfa']
+  const container = document.createElement('div');
+  container.style.maxWidth = '960px';
+  container.style.margin = '0 auto';
+  container.style.display = 'flex';
+  container.style.flexDirection = 'column';
+  container.style.gap = '14px';
 
-export default Blits.Component('Home', {
-  components: {
-    Loader,
-    Button,
-  },
-  template: `
-    <Element w="1920" h="1080" color="#1e293b">
-      <Element :y.transition="$y">
-        <Element
-          src="assets/logo.png"
-          w="200"
-          h="200"
-          :scale.transition="{value: $scale, duration: 500}"
-          :rotation.transition="{value: $rotation, duration: 800}"
-          :x.transition="{value: $x, delay: 200, duration: 1200, easing: 'cubic-bezier(1,-0.64,.39,1.44)'}"
-          mount="{x: 0.5}"
-          y="320"
-          :effects="[$shader('radius', {radius: 8})]"
-        />
-        <Loader :x="1920 / 2" mount="{x: 0.5}" y="600" w="160" :alpha.transition="$loaderAlpha" :loaderColor="$color" />
-        <Element y="600" :alpha.transition="$textAlpha">
-          <Text size="80" align="center" maxwidth="1920">Hello!</Text>
-          <Text
-            size="50"
-            align="center"
-            y="120"
-            :x="1920/2"
-            maxwidth="500"
-            lineheight="64"
-            mount="{x: 0.5}"
-            color="#ffffffaa"
-            content="Let's get started with Lightning 3 & Blits"
-          />
-        </Element>
-      </Element>
-        <Element w="13.5%" h="40" x="43%" y="10%" color="{top: '#763efb', bottom: '#433484'}">
-          <Button ref="btn" />
-        </Element>
-    </Element>
-  `,
-  state() {
-    return {
-      /**
-       * Y-position of the entire page contents
-       * @type {number}
-       */
-      y: 0,
-      /**
-       * X-position of the logo, used to create slide in transition
-       * @type {number}
-       */
-      x: -1000,
-      /**
-       * Rotation of the logo, used to create a spinning transition
-       * @type {number}
-       */
-      rotation: 0,
-      /**
-       * Scale of the logo, used to create a zoom-in / zoom-out transition
-       * @type {number}
-       */
-      scale: 1,
-      /**
-       * Alpha of the loader component, used to create a fade-in / fade-out transition
-       * @type {number}
-       */
-      loaderAlpha: 0,
-      /**
-       * Alpha of the text, used to create a fade-in transition
-       * @type {number}
-       */
-      textAlpha: 0,
-      /**
-       * Color passed into the loader component
-       * @type {string}
-       */
-      color: '',
+  const header = Header();
+
+  const main = document.createElement('main');
+  main.style.display = 'grid';
+  main.style.gridTemplateColumns = '1fr 1fr';
+  main.style.gap = '14px';
+  main.style.alignItems = 'start';
+
+  // Left: List
+  const list = NotesList({
+    onSelect: (id) => {
+      activeId = id;
+      render();
+    },
+    onEdit: (id) => {
+      activeId = id;
+      const n = getNoteById(id);
+      if (n) {
+        formTitle.textContent = 'Edit Note';
+        form.setValues({ title: n.title, body: n.body });
+      }
+      render();
+    },
+    onDelete: (id) => {
+      deleteNote(id);
+      if (activeId === id) activeId = null;
+      render();
+    },
+  });
+
+  // Right: Form and preview
+  const formWrap = document.createElement('div');
+  formWrap.style.display = 'flex';
+  formWrap.style.flexDirection = 'column';
+  formWrap.style.gap = '14px';
+
+  const form = NoteForm({
+    onSubmit: ({ title, body }) => {
+      if (activeId) {
+        updateNote(activeId, { title, body });
+      } else {
+        const created = createNote({ title, body });
+        activeId = created?.id ?? null;
+      }
+      form.clear();
+      formTitle.textContent = 'Add Note';
+      render();
+    },
+    onCancelEdit: () => {
+      activeId = null;
+      formTitle.textContent = 'Add Note';
+      render();
+    },
+  });
+
+  const formTitle = form.querySelector('h2');
+
+  const preview = document.createElement('section');
+  preview.style.background = Theme.colors.surface;
+  preview.style.border = `1px solid ${Theme.colors.border}`;
+  preview.style.borderRadius = '14px';
+  preview.style.boxShadow = Theme.shadow;
+  preview.style.padding = '16px';
+  preview.style.minHeight = '120px';
+  preview.style.transition = 'all 200ms ease';
+
+  const pvTitle = document.createElement('div');
+  pvTitle.style.fontWeight = '700';
+  pvTitle.style.marginBottom = '6px';
+
+  const pvBody = document.createElement('div');
+  pvBody.style.whiteSpace = 'pre-wrap';
+  pvBody.style.color = Theme.colors.muted;
+
+  preview.appendChild(pvTitle);
+  preview.appendChild(pvBody);
+
+  const emptyState = EmptyState();
+
+  formWrap.appendChild(form);
+  formWrap.appendChild(preview);
+
+  main.appendChild(list);
+  main.appendChild(formWrap);
+
+  container.appendChild(header);
+  container.appendChild(main);
+  root.appendChild(container);
+
+  let activeId = null;
+
+  function render() {
+    const notes = getNotes();
+    list.render(notes, activeId);
+
+    const active = notes.find((n) => n.id === activeId);
+    if (active) {
+      pvTitle.textContent = active.title || '(Untitled)';
+      pvBody.textContent = active.body || '';
+      preview.style.opacity = '1';
+      if (emptyState.parentElement) emptyState.parentElement.removeChild(emptyState);
+      if (!formWrap.contains(preview)) formWrap.appendChild(preview);
+    } else {
+      // Show empty state for preview
+      pvTitle.textContent = '';
+      pvBody.textContent = '';
+      preview.style.opacity = '0.6';
+      if (formWrap.contains(preview)) formWrap.removeChild(preview);
+      if (!formWrap.contains(emptyState)) formWrap.appendChild(emptyState);
     }
-  },
-  hooks: {
-    ready() {
-      this.rotateColors(200)
+  }
 
-      this.loaderAlpha = 1
-      this.x = 1920 / 2
+  // Initial render
+  render();
 
-      this.$setTimeout(() => {
-        this.rotation = 720
-        this.scale = 1.5
-      }, 3000)
+  // Responsive column collapse
+  const resizeObserver = new ResizeObserver(() => {
+    const width = root.clientWidth;
+    if (width < 900) {
+      main.style.gridTemplateColumns = '1fr';
+    } else {
+      main.style.gridTemplateColumns = '1fr 1fr';
+    }
+  });
+  resizeObserver.observe(root);
 
-      this.$setTimeout(() => {
-        this.scale = 1
-      }, 3000 + 300)
-
-      this.$setTimeout(() => {
-        this.y = -60
-        this.loaderAlpha = 0
-        this.scale = 1
-        this.textAlpha = 1
-      }, 6000)
-    },
-    focus() {
-      this.$select('btn').$focus() // Select the button with the ref 'btn'
-    },
-  },
-  methods: {
-    /**
-     * Method to rotate the colors of the loader
-     * @param {number} interval - interval in ms
-     */
-    rotateColors(interval) {
-      let i = 0
-      this.$setInterval(() => {
-        i++
-        if (i >= colors.length) i = 0
-        this.color = colors[i]
-      }, interval)
-    },
-  },
-})
+  return root;
+}
